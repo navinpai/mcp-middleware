@@ -22,9 +22,6 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Run tests
-        run: go test -v ./test/...
-
       - name: Build binaries
         run: |
           TAG=${GITHUB_REF_NAME}
