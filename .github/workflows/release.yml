@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./test/...
+
+      - name: Build binaries
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          GOOS=linux   GOARCH=amd64 go build -ldflags="-X main.version=${TAG}" -o mcp-middleware-linux-amd64 .
+          GOOS=darwin  GOARCH=amd64 go build -ldflags="-X main.version=${TAG}" -o mcp-middleware-darwin-amd64 .
+          GOOS=darwin  GOARCH=arm64 go build -ldflags="-X main.version=${TAG}" -o mcp-middleware-darwin-arm64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.version=${TAG}" -o mcp-middleware-windows-amd64.exe .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mcp-middleware-linux-amd64
+            mcp-middleware-darwin-amd64
+            mcp-middleware-darwin-arm64
+            mcp-middleware-windows-amd64.exe
+          generate_release_notes: true
